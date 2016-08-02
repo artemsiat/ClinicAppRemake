@@ -37,7 +37,7 @@ public class DataBaseTest {
         System.out.println("Is table created ");
         System.out.println(admins.isTABLE_CREATED());
 
-        admins.dropTable();
+
 
     }
 

@@ -21,6 +21,7 @@ public class Programm {
 
     public Programm(){
         DATA_BASE = new DataBase(this);
+        DATA_BASE.loadAdministrators();
     }
 
 

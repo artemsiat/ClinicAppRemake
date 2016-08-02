@@ -1,11 +1,13 @@
 package frames.admin_frame;
 
 import data_base.Administrators;
-import data_base.DataBaseModel;
+import data_base.DBSecondLayer;
 import frames.FrameControllerModel;
 import frames.FrameModel;
 import instances.Admin;
 import instances.Person;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -30,6 +32,8 @@ public class AdminFrameController extends FrameControllerModel implements Initia
 
     private ObservableList<Admin> ADMINS_LIST;
 
+    private Admin SELECTED_ADMIN;
+
     //Admin fields
 
     @FXML private TextField USER_NAME_FIELD;
@@ -50,17 +54,21 @@ public class AdminFrameController extends FrameControllerModel implements Initia
     @FXML private TableColumn<Admin, String> DOB_COL;
     @FXML private TableColumn<Admin, String> EMAIL_COL;
 
+    //Restore
+    @FXML private CheckBox SHOW_REMOVED_CHECKBOX;
+    @FXML private Button RESTORE_PERSON_BUTTON;
 
     //Controller
 
     public AdminFrameController(Programm programm, AdminFrame adminFrame) {
 
-        super(programm, "admin", (FrameModel)adminFrame, (DataBaseModel)programm.getDATA_BASE().getADMINISTRATORS());
+        super(programm, "admin", (FrameModel)adminFrame, (DBSecondLayer)programm.getDATA_BASE().getADMINISTRATORS());
 
         this.PROGRAMM = programm;
         this.ADMIN_FRAME = adminFrame;
         this.ADMINISTRATORS = PROGRAMM.getDATA_BASE().getADMINISTRATORS();
         this.ADMINS_LIST = ADMINISTRATORS.getADMINISTRATORS();
+        this.SELECTED_ADMIN = null;
     }
 
     // Initialization
@@ -76,6 +84,7 @@ public class AdminFrameController extends FrameControllerModel implements Initia
 
         //Set the status of the tableIsCreated
         setTableCreatedStatus();
+        setCheckBoxListener();
     }
 
     //Table methods
@@ -86,11 +95,19 @@ public class AdminFrameController extends FrameControllerModel implements Initia
         //Select Person
         if ((TABLE_ADMINS.getSelectionModel().getSelectedItem() != null)){
 
-            ADMINS_LIST.get(TABLE_ADMINS.getSelectionModel().getSelectedIndex());
+            SELECTED_ADMIN = ADMINS_LIST.get(TABLE_ADMINS.getSelectionModel().getSelectedIndex());
 
-            //TODO TEST
-            USER_NAME_FIELD.setText("Working Selection");
+            setSelectedPersonFields(SELECTED_ADMIN);
+            setSelectedAdminFields();
         }
+    }
+
+    private void setSelectedAdminFields() {
+
+        USER_NAME_FIELD.setText(SELECTED_ADMIN.getUSER_NAME());
+        PASSWORD_FIELD.setText(SELECTED_ADMIN.getPASSWORD());
+        PASSWORD_RE_FIELD.setText(SELECTED_ADMIN.getPASSWORD());
+
     }
 
     private void createAdminTable() {
@@ -109,6 +126,7 @@ public class AdminFrameController extends FrameControllerModel implements Initia
     }
 
 
+
     //Buttons Admins
 
     @FXML void addBtnAction(ActionEvent event) {
@@ -122,27 +140,58 @@ public class AdminFrameController extends FrameControllerModel implements Initia
         //TODO check that two password fields match
 
         //create new person type admins
-        System.out.println("ADMINS Length: " + ADMINS_LIST.size());
         Admin admin = (Admin)createNewAdmin();
 
-        admin.setUSER_NAME(USER_NAME_FIELD.getText());
-        admin.setPASSWORD(PASSWORD_FIELD.getText());
 
-        System.out.println(admin.toString());
+
         ADMINISTRATORS.addObject(admin);
-        System.out.println("ADMINS Length: " + ADMINS_LIST.size());
 
     }
 
 
     @FXML void removeBtnAction(ActionEvent event) {
-
+        if (SELECTED_ADMIN != null){
+            if (ADMINISTRATORS.removeObject(SELECTED_ADMIN)){
+                diselectAdmin();
+            }
+        }
     }
 
     @FXML void updateBtnAction(ActionEvent event) {
 
+        if (SELECTED_ADMIN != null){
+            if (ADMINISTRATORS.updateObject(SELECTED_ADMIN, createNewAdmin())){
+
+                diselectAdmin();
+            }
+        }
+
+    }
+    @FXML void restoreBtnAction(ActionEvent event) {
+
+        if (SELECTED_ADMIN != null){
+            if (ADMINISTRATORS.restoreObject(SELECTED_ADMIN)){
+
+                diselectAdmin();
+            }
+        }
     }
 
+    private void diselectAdmin() {
+        SELECTED_ADMIN = null;
+        TABLE_ADMINS.getSelectionModel().select(null);
+        clearAdminFields();
+
+    }
+
+    private void clearAdminFields() {
+
+        clearPersonFields();
+
+        USER_NAME_FIELD.setText("");
+        PASSWORD_FIELD.setText("");
+        PASSWORD_RE_FIELD.setText("");
+    }
 
 
     //Initialization
@@ -172,7 +221,14 @@ public class AdminFrameController extends FrameControllerModel implements Initia
 
         Admin admin = (Admin)person;
 
+        admin.setUSER_NAME(USER_NAME_FIELD.getText());
+        admin.setPASSWORD(PASSWORD_FIELD.getText());
+
         return admin;
+    }
+
+    private void setSelectedFields(){
+
     }
 
     public boolean loginPassChecker(){
@@ -190,5 +246,20 @@ public class AdminFrameController extends FrameControllerModel implements Initia
         return true;
     }
 
+    private void setCheckBoxListener(){
+        SHOW_REMOVED_CHECKBOX.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                System.out.println("New value : " + newValue);
+                if (newValue){
+                    ADMINS_LIST = ADMINISTRATORS.getADMINISTRATORS_REMOVED();
+                }
+                else {
+                    ADMINS_LIST = ADMINISTRATORS.getADMINISTRATORS();
+                }
+                TABLE_ADMINS.setItems(ADMINS_LIST);
+            }
+        });
+    }
 
 }

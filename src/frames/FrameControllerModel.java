@@ -1,6 +1,6 @@
 package frames;
 
-import data_base.DataBaseModel;
+import data_base.DBSecondLayer;
 import instances.Person;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -20,7 +20,7 @@ public class FrameControllerModel {
     private Programm PROGRAMM;
     private String TYPE;
     private FrameModel FRAME_MODEL;
-    private DataBaseModel DATA_BASE_MODEL;
+    private DBSecondLayer DATA_BASE_MODEL;
 
     //Person Labels
 
@@ -62,7 +62,7 @@ public class FrameControllerModel {
 
     //Controller
 
-    public FrameControllerModel(Programm PROGRAMM, String type, FrameModel frameModel, DataBaseModel dataBaseModel){
+    public FrameControllerModel(Programm PROGRAMM, String type, FrameModel frameModel, DBSecondLayer dataBaseModel){
         this.PROGRAMM = PROGRAMM;
         this.TYPE = type;
         this.FRAME_MODEL = frameModel;
@@ -96,8 +96,6 @@ public class FrameControllerModel {
         EMAIL_LABEL.setText(FrameLabelText.getEmailLabel());
 
     }
-
-
 
     /**
      * Set buttons text for the following buttons:
@@ -148,17 +146,30 @@ public class FrameControllerModel {
     }
 
 
+    public void setSelectedPersonFields(Person selectedPerson){
+
+        LAST_NAME_FIELD.setText(selectedPerson.getLAST_NAME());
+        FIRST_NAME_FIELD.setText(selectedPerson.getFIRST_NAME());
+        MIDDLE_NAME_FIELD.setText(selectedPerson.getMIDDLE_NAME());
+        DOB_DATE_PICKER.setValue(selectedPerson.getDOB());
+        PHONE_FIELD.setText(selectedPerson.getPHONE());
+        EMAIL_FIELD.setText(selectedPerson.getEMAIL());
+
+    }
+    protected  void clearPersonFields(){
+        LAST_NAME_FIELD.setText("");
+        FIRST_NAME_FIELD.setText("");
+        MIDDLE_NAME_FIELD.setText("");
+        DOB_DATE_PICKER.setValue(null);
+        PHONE_FIELD.setText("");
+        EMAIL_FIELD.setText("");
+    }
 
     //Buttons Table
 
     @FXML void createTableBtnAction(ActionEvent event) {
-/*        boolean status = DATA_BASE_MODEL.createTable();
-        LOG_INFO = DATA_BASE_MODEL.getSTATUS() + "\n" + "\n" + LOG_INFO;
 
-        setTableCreatedStatus(DATA_BASE_MODEL.isTABLE_CREATED());
-        displayLog();*/
-
-        boolean status = DATA_BASE_MODEL.createNewTable();
+        boolean status = DATA_BASE_MODEL.createTable();
         LOG_INFO = DATA_BASE_MODEL.getSTATUS() + "\n" + "\n" + LOG_INFO;
 
         setTableCreatedStatus(DATA_BASE_MODEL.isTABLE_CREATED());
@@ -177,7 +188,6 @@ public class FrameControllerModel {
     /**
      * Calls the DataBaseModel to check if table is created
      * All DataBase Instances inherit from DataBaseModel
-     *
      */
     @FXML void checkTableBtnAction(ActionEvent event) {
         boolean status = DATA_BASE_MODEL.checkTable();
@@ -188,7 +198,6 @@ public class FrameControllerModel {
     }
 
     private void displayLog() {
-
         LOG_TEXT_AREA.setText(LOG_INFO);
     }
 

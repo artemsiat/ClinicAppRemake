@@ -27,10 +27,13 @@ public class DataBase {
     public DataBase(Programm programm){
         this.PROGRAMM = programm;
         ADMINISTRATORS = new Administrators(this, PROGRAMM);
-        ADMINISTRATORS.loadObjects();
     }
 
     //Load the rest of the Instances
+
+    public void loadAdministrators(){
+        ADMINISTRATORS.loadObjects();
+    }
 
     public void loadMainDB(){
         //Load Patients, Doctors, Working Days etc.

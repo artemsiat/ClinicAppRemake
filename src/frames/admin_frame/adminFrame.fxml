@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
@@ -87,11 +88,12 @@
             </GridPane>
          </children>
       </VBox>
-      <HBox layoutX="861.0" layoutY="380.0" spacing="10.0">
+      <HBox layoutX="861.0" layoutY="420.0" spacing="10.0">
          <children>
             <Button fx:id="ADD_PERSON_BUTTON" mnemonicParsing="false" onAction="#addBtnAction" text="add" />
             <Button fx:id="UPDATE_PERSON_BUTTON" mnemonicParsing="false" onAction="#updateBtnAction" text="update" />
             <Button fx:id="DELETE_PERSON_BUTTON" mnemonicParsing="false" onAction="#removeBtnAction" text="delete" />
+            <Button fx:id="RESTORE_PERSON_BUTTON" mnemonicParsing="false" onAction="#restoreBtnAction" text="restore" />
          </children>
       </HBox>
       <HBox alignment="CENTER" layoutX="18.0" layoutY="453.0" spacing="15.0">
@@ -108,5 +110,6 @@
          <font>
             <Font size="10.0" />
          </font></TextArea>
+      <CheckBox fx:id="SHOW_REMOVED_CHECKBOX" layoutX="861.0" layoutY="373.0" mnemonicParsing="false" text="Show Deleted" />
    </children>
 </AnchorPane>

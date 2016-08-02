@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 /**
  * Created by Artem Siatchinov on 7/24/2016.
  */
-public class Administrators extends DataBaseModel {
+public class Administrators extends DBSecondLayer {
     //public class Administrators extends DataBaseModel implements ObjectDBInterface{
 
     private Programm PROGRAMM;
@@ -20,26 +20,37 @@ public class Administrators extends DataBaseModel {
 
     //ArrayList
     private ObservableList<Admin> ADMINISTRATORS;
+    private ObservableList<Admin> ADMINISTRATORS_REMOVED;
 
 
     //Statements
     private String TABLE_NAME;
     private String CREATE_TABLE_STATEMENT ;
-    private String DROP_TABLE_STATEMENT;
     private String LOAD_TABLE_STATEMENT;
     private String ADD_OBJECT_STATEMENT;
 
 
+    //Constructor
     public Administrators(DataBase dataBase, Programm programm){
 
         super(programm, dataBase);
+
+        setStatements();
 
         this.DATA_BASE = dataBase;
         this.PROGRAMM = programm;
 
         //Initializes new list of administrators
         ADMINISTRATORS = FXCollections.observableArrayList();
+        ADMINISTRATORS_REMOVED = FXCollections.observableArrayList();
 
+        //Check table if created
+        checkTable();
+    }
+
+    //Initialization
+
+    private void setStatements(){
         //Statements
         TABLE_NAME = "ADMINS";
 
@@ -58,52 +69,108 @@ public class Administrators extends DataBaseModel {
                 "when_created timestamp,"+
                 "deleted boolean)";
 
-        DROP_TABLE_STATEMENT = "DROP TABLE IF EXISTS " + TABLE_NAME;
 
+        //Todo to be moved to second layer reusable code
         LOAD_TABLE_STATEMENT = "select * from " + TABLE_NAME;
+
+
 
         ADD_OBJECT_STATEMENT = "insert into " + TABLE_NAME +
                 "(first_name, last_name, middle_name, dob, phone, email, user_name, password, creator, when_created, deleted)" + //  11 variables
                 " values(?,?,?,?,?,?,?,?,?,?,?)";
-
-        initializer((DB_Instances_Interface)this);
     }
 
 
-    //Table Methods
-    public boolean createNewTable(){
-
-        if (createTableOpertion(CREATE_TABLE_STATEMENT)) {
-            renewList();
-            return true;
-        }
-        return false;
-    }
+    //Implementing Abstract Methods
 
     //Table Methods
 
-    @Override public String getTableCreateStatement() {
+    @Override protected String getCreateTableStatement() {
         return CREATE_TABLE_STATEMENT;
     }
 
-    @Override public String getTableDropStatement() {
-        return DROP_TABLE_STATEMENT;
-    }
 
-    @Override public String getTableName() {
+    @Override protected String getTableName() {
         return TABLE_NAME;
     }
 
+    //List Methods
+
+    @Override protected void resetList() {
+        ADMINISTRATORS.clear();
+        ADMINISTRATORS_REMOVED.clear();
+    }
 
 
+    //Object Methods
 
-    //Insert operation
 
-    @Override public String getAddPrepStatement() {
+    //Load Admins
+
+    /**
+     *
+     * Receives Result Set from the First layer class for processing and obtaining new Instance of admin
+     * if Admin is marked as Deleted then the method will not add that instance to the list
+     *
+     */
+    @Override protected void processLoadResultSet(ResultSet resultSet) throws SQLException {
+
+        resetList();
+
+        //Todo Printing result
+        System.out.println();
+        System.out.println("Printing Administrators in data_base.Administrators.processLoadResultSet");
+
+        while (resultSet.next()){
+            //Create new Admin
+
+            Admin admin = new Admin();
+
+            admin.setID(resultSet.getInt("id"));
+            admin.setFIRST_NAME(resultSet.getString("first_name"));
+            admin.setLAST_NAME(resultSet.getString("last_name"));
+            admin.setMIDDLE_NAME(resultSet.getString("middle_name"));
+
+            admin.setDOB(resultSet.getDate("dob"));
+            admin.setPHONE(resultSet.getString("phone"));
+            admin.setEMAIL(resultSet.getString("email"));
+
+            admin.setUSER_NAME(resultSet.getString("user_name"));
+            admin.setPASSWORD(resultSet.getString("password"));
+            admin.setCREATOR(resultSet.getInt("creator"));
+            admin.setWHEN_CREATED(resultSet.getTimestamp("when_created").toLocalDateTime());
+            admin.setDELETED(resultSet.getBoolean("deleted"));
+
+
+            //will Format fields to be ready for display
+            admin.process();
+            if (admin.isDELETED()){
+                System.out.print("REMOVED ");
+                System.out.println(admin.toString());
+                ADMINISTRATORS_REMOVED.add(admin);
+                continue;
+            }
+            System.out.println(admin.toString());
+            //Add new object to the list
+
+            ADMINISTRATORS.add(admin);
+
+        }
+
+        //Todo Printing result
+        System.out.println();
+
+
+    }
+
+
+    //Add Admin
+
+    @Override protected String getAddNewObjectStatement(){
         return ADD_OBJECT_STATEMENT;
     }
 
-    @Override public PreparedStatement prepareAddPrepStat(PreparedStatement preparedStatement, DataBaseInstance newAdmin) {
+    @Override protected PreparedStatement prepareAddPrepStat(PreparedStatement preparedStatement, DataBaseInstance newAdmin) {
 
         Admin admin = (Admin)newAdmin;
 
@@ -138,88 +205,78 @@ public class Administrators extends DataBaseModel {
         return preparedStatement;
     }
 
-    @Override public void addToListNewObject (DataBaseInstance dataBaseInstance) {
+    @Override protected void addNewObjectToList(DataBaseInstance dataBaseInstance){
         Admin admin = (Admin)dataBaseInstance;
-        //process to create Properties for Display
         admin.process();
         ADMINISTRATORS.add(admin);
     }
 
+    //Remove Admin
 
-
-    //Load instances Operation
-
-    @Override public String getLoadTableStatement() {
-        return  LOAD_TABLE_STATEMENT;
-    }
-
-    @Override public void processLoadResultSet(ResultSet resultSet) throws SQLException {
-
-        // overwrite existing ArrayList with new one
-        renewList();
-
-            while (resultSet.next()){
-                //Create new Admin
-
-                Admin admin = new Admin();
-
-                admin.setID(resultSet.getInt("id"));
-                admin.setFIRST_NAME(resultSet.getString("first_name"));
-                admin.setLAST_NAME(resultSet.getString("last_name"));
-                admin.setMIDDLE_NAME(resultSet.getString("middle_name"));
-
-                admin.setDOB(resultSet.getDate("dob"));
-                admin.setPHONE(resultSet.getString("phone"));
-                admin.setEMAIL(resultSet.getString("email"));
-
-                admin.setUSER_NAME(resultSet.getString("user_name"));
-                admin.setPASSWORD(resultSet.getString("password"));
-                admin.setCREATOR(resultSet.getInt("creator"));
-                admin.setWHEN_CREATED(resultSet.getTimestamp("when_created").toLocalDateTime());
-                admin.setDELETED(resultSet.getBoolean("deleted"));
-
-
-                //will Format fields to be ready for display
-                admin.process();
-
-                System.out.println(admin.toString());
-                //Add new object to the list
-
-                ADMINISTRATORS.add(admin);
-
-            }
-
-
+    @Override protected void removeObjectFromList(DataBaseInstance dataBaseInstance) {
+        ADMINISTRATORS.remove((Admin)dataBaseInstance);
+        ADMINISTRATORS_REMOVED.add((Admin)dataBaseInstance);
     }
 
 
+    //Update Admin
+
+    @Override protected String getUpdateObjectStatement(DataBaseInstance oldObject, DataBaseInstance newObject){
+
+        Admin oldAdmin = (Admin)oldObject;
+        Admin newAdmin = (Admin)newObject;
+
+        //dob = 'date',
+        //dob = null,
 
 
-    @Override public ResultSet getAddObjectResultSet(Object object) {
-        return null;
+        String dob ="";
+        if (newAdmin.getDOB() != null){
+            dob = "dob = '" + Date.valueOf(newAdmin.getDOB())+ "', ";
+        }
+        else {
+            dob = "dob = null, ";
+        }
+
+        String sqlStatement =  "UPDATE " + TABLE_NAME + " SET " +
+                "first_name = '" + newAdmin.getFIRST_NAME() + "', " +
+                "last_name = '" + newAdmin.getLAST_NAME() + "', " +
+                "middle_name = '" + newAdmin.getMIDDLE_NAME() + "', " +
+                dob +
+                "phone = '" + newAdmin.getPHONE() + "', " +
+                "email = '" + newAdmin.getEMAIL() + "', " +
+                "user_name = '" + newAdmin.getUSER_NAME() + "', " +
+                "password = '" + newAdmin.getPASSWORD() + "', " +
+                "deleted = '" + newAdmin.isDELETED() + "' " +
+                "WHERE id =" + oldObject.getID() + ";";
+
+        return sqlStatement;
+
     }
 
-    @Override public Statement getRemoveObjectStatement(Object object) {
-        return null;
+    @Override protected void updateObjectsInList(DataBaseInstance oldObject, DataBaseInstance newObject) {
+        newObject.setID(oldObject.getID());
+        int index = ADMINISTRATORS.indexOf((Admin)oldObject);
+        ADMINISTRATORS.set(index, (Admin)newObject);
     }
 
-    @Override public ResultSet getUpdateObjectStatement(Object object) {
-        return null;
+
+    //Restore Admin
+
+    @Override
+    protected void restoreObjectsList(DataBaseInstance dataBaseInstance) {
+        ADMINISTRATORS.add((Admin)dataBaseInstance);
+        ADMINISTRATORS_REMOVED.remove((Admin)dataBaseInstance);
     }
-
-
-
-    //Helper methods
-
-    @Override public void renewList() {
-        ADMINISTRATORS.clear();
-    }
-
 
 
     //Getters
 
     public ObservableList<Admin> getADMINISTRATORS() {
         return ADMINISTRATORS;
+    }
+
+    public ObservableList<Admin> getADMINISTRATORS_REMOVED() {
+        return ADMINISTRATORS_REMOVED;
     }
 }

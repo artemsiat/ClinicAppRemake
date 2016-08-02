@@ -5,8 +5,13 @@ package programm.error_texts;
  */
 public class DataBaseErrorText {
     private static String TABLE_NOT_CREATED_ERROR = "Ошибка: таблица не создана. ";
+    private static String TABLE_ALREADY_CREATED_ERROR = "Ошибка: таблица уже создана. ";
 
     public static String getTableNotCreatedError() {
         return TABLE_NOT_CREATED_ERROR;
+    }
+
+    public static String getTableAlreadyCreatedError() {
+        return TABLE_ALREADY_CREATED_ERROR;
     }
 }
